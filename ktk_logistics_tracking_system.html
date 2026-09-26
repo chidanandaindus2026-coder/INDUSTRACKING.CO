@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KTK INDUS CROP CARE PVT LTD - Logistics & Shipment Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS XLSX Library for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for table container */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #viewPodModal, #viewPodModal * {
+                visibility: visible;
+            }
+            #viewPodModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col font-sans bg-slate-50">
+
+    <!-- Navigation Header -->
+    <header class="bg-navy-900 text-white shadow-xl sticky top-0 z-30 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo & Brand Title -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="resetToHome()">
+                    <div class="bg-brand-500 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                        <i class="fa-solid fa-truck-fast text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-black text-lg leading-tight tracking-wide text-white sm:text-xl uppercase">KTK INDUS CROP CARE PVT LTD</h1>
+                        <p class="text-[11px] text-brand-100 font-medium tracking-wider uppercase flex items-center gap-1">
+                            <i class="fa-solid fa-leaf text-brand-500 text-xs"></i>
+                            <span>Logistics & Supply Chain Management System</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Admin Status & Auth Controls -->
+                <div class="flex items-center space-x-3">
+                    <div id="adminBadge" class="hidden sm:flex items-center space-x-2 bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-full shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-bold tracking-wide">ADMIN MODE</span>
+                    </div>
+
+                    <button id="authBtn" onclick="toggleAdminAuth()" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl border border-slate-700 transition duration-150 shadow-sm">
+                        <i class="fa-solid fa-user-lock text-brand-500" id="authBtnIcon"></i>
+                        <span id="authBtnText">Admin Login</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- PUBLIC LIVE TRACKING SEARCH BANNER -->
+        <section class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-emerald-700/30">
+            <div class="absolute -right-12 -bottom-12 opacity-10 text-white pointer-events-none">
+                <i class="fa-solid fa-route text-[220px]"></i>
+            </div>
+            <div class="relative z-10 max-w-3xl space-y-3">
+                <div class="inline-flex items-center space-x-2 bg-brand-500/20 text-brand-300 text-xs px-3 py-1 rounded-full border border-brand-500/30">
+                    <i class="fa-solid fa-circle-dot text-[10px] animate-ping"></i>
+                    <span>Real-Time Logistics Portal</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Public Live Shipment Tracking</h2>
+                <p class="text-emerald-100/80 text-xs sm:text-sm leading-relaxed">
+                    Lookup dispatch progress, estimated transit duration, transporter info, and download verified Proof of Delivery (POD) documents.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="quickSearchInput" onkeyup="handleQuickTrack(event)" placeholder="Search by LR No (e.g. BLY81792), Inv No (e.g. ICCKA/26-270012), or Party Name..." class="w-full pl-11 pr-4 py-3.5 rounded-2xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xl text-xs sm:text-sm bg-white/95">
+                    </div>
+                    <button onclick="executeQuickTrack()" class="bg-brand-500 hover:bg-brand-600 text-white font-bold px-7 py-3.5 rounded-2xl transition duration-150 shadow-xl flex items-center justify-center space-x-2 text-xs sm:text-sm">
+                        <span>Track Order</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Track Result Card -->
+            <div id="quickTrackResult" class="hidden mt-6 bg-white/95 backdrop-blur-md rounded-2xl p-6 text-slate-900 shadow-2xl border border-slate-200/80 transition-all duration-300">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- Analytics & Summary Metric Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Orders</p>
+                    <h3 id="statTotal" class="text-lg sm:text-2xl font-black text-slate-900">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i class="fa-solid fa-truck-ramp-box text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Delivered</p>
+                    <h3 id="statDelivered" class="text-lg sm:text-2xl font-black text-slate-900">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">In Transit</p>
+                    <h3 id="statTransit" class="text-lg sm:text-2xl font-black text-slate-900">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5">
+                <div class="p-3 bg-teal-50 text-teal-600 rounded-xl">
+                    <i class="fa-solid fa-file-signature text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">POD Received</p>
+                    <h3 id="statPodReceived" class="text-lg sm:text-2xl font-black text-slate-900">0</h3>
+                </div>
+            </div>
+
+            <div class="col-span-2 md:col-span-1 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i class="fa-solid fa-indian-rupee-sign text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Value</p>
+                    <h3 id="statAmount" class="text-base sm:text-xl font-black text-slate-900">₹0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls & Data Table Container -->
+        <section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+            <!-- Table Header Toolbar -->
+            <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/70">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center space-x-2.5">
+                        <i class="fa-solid fa-list-check text-brand-600"></i>
+                        <span>Shipment Tracking Ledger</span>
+                        <span id="recordCount" class="bg-slate-200 text-slate-700 text-xs font-black px-2.5 py-0.5 rounded-full">0</span>
+                    </h2>
+                    <p class="text-xs text-slate-500">Master database of all dispatches, delivery dates, and POD records</p>
+                </div>
+
+                <!-- Action Controls Toolbar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Global Table Filter Input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="tableFilterInput" onkeyup="applyFilters()" placeholder="Filter shipments..." class="pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 w-36 sm:w-48 bg-white">
+                    </div>
+
+                    <!-- Delivery Status Filter -->
+                    <select id="delFilter" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-xl px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="ALL">All Delivery Status</option>
+                        <option value="DELIVERED">Delivered (YES)</option>
+                        <option value="TRANSIT">In Transit (NO)</option>
+                    </select>
+
+                    <!-- POD Status Filter -->
+                    <select id="podFilter" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-xl px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="ALL">All POD Status</option>
+                        <option value="RECEIVED">POD Received</option>
+                        <option value="NO">POD Pending</option>
+                    </select>
+
+                    <!-- Export Excel Button -->
+                    <button onclick="exportToExcel()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition duration-150 flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                        <span>Export Excel</span>
+                    </button>
+
+                    <!-- Save All Changes Button (ADMIN ONLY) -->
+                    <button id="saveAllBtn" onclick="saveAllToStorage(true)" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition duration-150 flex items-center space-x-1.5 shadow-md animate-pulse">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Save All Updated</span>
+                    </button>
+
+                    <!-- Add New Shipment Button (ADMIN ONLY) -->
+                    <button id="addShipmentBtn" onclick="openShipmentModal()" class="hidden bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition duration-150 flex items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>+ Add Shipment</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table Container -->
+            <div class="overflow-x-auto min-h-[420px]">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100/90 text-slate-700 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
+                            <th class="p-3 text-center">#</th>
+                            <th class="p-3">Inv No & Date</th>
+                            <th class="p-3">Party Name & Destination</th>
+                            <th class="p-3">LR No & Transport</th>
+                            <th class="p-3 text-center">Qty</th>
+                            <th class="p-3 text-right">Inv Amt (₹)</th>
+                            <th class="p-3 text-center">Delivered</th>
+                            <th class="p-3 text-center">POD Status</th>
+                            <th class="p-3 text-center">E-Way Bill</th>
+                            <th class="p-3 text-center">Actions / View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-200 bg-white">
+                        <!-- Rows rendered programmatically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer -->
+            <div class="p-3.5 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
+                <span>Showing <strong id="visibleCount" class="text-slate-800">0</strong> entries</span>
+                <span class="text-[11px] italic font-medium">KTK Indus Crop Care Pvt Ltd Tracking Database</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Admin Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                <div class="flex items-center space-x-3 text-slate-900">
+                    <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                        <i class="fa-solid fa-user-shield text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-lg">Admin Authentication</h3>
+                        <p class="text-xs text-slate-400">Log in to manage shipments & PODs</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="loginUsername" required value="admin" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required value="123" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <p id="loginError" class="text-xs text-red-500 hidden font-bold">Invalid credentials! (Default: admin / 123)</p>
+                
+                <div class="pt-3 flex items-center justify-between border-t border-slate-100">
+                    <button type="button" onclick="quickToggleAdmin()" class="text-xs text-brand-600 font-bold hover:underline">One-Click Admin Pass</button>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="closeModal('loginModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Cancel</button>
+                        <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md">Sign In</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add / Edit Shipment Modal -->
+    <div id="shipmentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 sm:p-8 border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-truck-ramp-box text-brand-600 text-xl"></i>
+                    <h3 id="modalTitle" class="font-black text-lg text-slate-900">Add New Shipment Record</h3>
+                </div>
+                <button onclick="closeModal('shipmentModal')" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="shipmentForm" onsubmit="saveShipment(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="editSlNo">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">State</label>
+                        <input type="text" id="formState" required value="KTK" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Invoice Number *</label>
+                        <input type="text" id="formInvNo" required placeholder="e.g. ICCKA/26-270027" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Invoice Date *</label>
+                        <input type="date" id="formInvDate" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Party Name *</label>
+                        <input type="text" id="formPartyName" required placeholder="Party / Client Company Name" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Destination *</label>
+                        <input type="text" id="formDestination" required placeholder="Destination City/Location" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">LR Number *</label>
+                        <input type="text" id="formLrNo" required placeholder="LR Number (e.g. BLY81800)" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Transport Name *</label>
+                        <input type="text" id="formTransport" required placeholder="SGRL / ANANYA / VRL / etc." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Contact No</label>
+                        <input type="text" id="formContact" placeholder="Transporter Contact" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Dispatch Date</label>
+                        <input type="date" id="formDispatchDate" onchange="autoCalcDays()" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Quantity (Boxes/Pkts)</label>
+                        <input type="number" id="formQty" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Invoice Amount (₹)</label>
+                        <input type="number" id="formInvAmt" min="0" step="0.01" value="0" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Delivered Status</label>
+                        <select id="formDelivered" onchange="autoCalcDays()" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-semibold">
+                            <option value="YES">YES (Delivered)</option>
+                            <option value="NO">NO (In Transit)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">On Dated (Delivered Date)</label>
+                        <input type="date" id="formDeliveredDate" onchange="autoCalcDays()" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Taken Days</label>
+                        <input type="number" id="formDaysTaken" readonly class="w-full px-3 py-2 border border-slate-200 bg-slate-100 rounded-xl font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">POD Status</label>
+                        <select id="formPodStatus" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-semibold">
+                            <option value="RECEIVED">RECEIVED</option>
+                            <option value="NO">NO (Pending)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">E-Way Bill Number</label>
+                        <input type="text" id="formEwayBill" placeholder="E-Way Bill No." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">E-Way Part B Updated?</label>
+                        <select id="formEwayPartB" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white">
+                            <option value="">NA / None</option>
+                            <option value="YES">YES</option>
+                            <option value="NO">NO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Form POD File Direct Upload Option -->
+                <div class="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200">
+                    <label class="block font-bold text-emerald-900 mb-1">Direct POD Upload (Optional)</label>
+                    <input type="file" id="formPodFile" accept="image/*,application/pdf" onchange="handleFormPodFile(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                    <input type="hidden" id="formPodBase64">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Remarks</label>
+                    <textarea id="formRemarks" rows="2" placeholder="Optional delivery notes or transporter remarks..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500"></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('shipmentModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- POD Document Dedicated Upload Modal -->
+    <div id="podUploadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h3 class="font-bold text-lg text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-arrow-up text-brand-600"></i>
+                    <span>Upload POD Document</span>
+                </h3>
+                <button onclick="closeModal('podUploadModal')" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <p class="text-slate-600">Attach signed Proof of Delivery (POD) for LR No: <strong id="podModalLr" class="text-slate-900 font-black"></strong></p>
+                <input type="hidden" id="podTargetSlNo">
+
+                <div class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-2xl p-6 text-center transition bg-slate-50/80">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-500 mb-2"></i>
+                    <p class="font-bold text-slate-800 mb-0.5">Click or Browse POD Document</p>
+                    <p class="text-[10px] text-slate-400">Supports PNG, JPG, JPEG Image format</p>
+                    <input type="file" id="podFileInput" accept="image/*" onchange="handlePodFileSelect(event)" class="mt-3 block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-100 file:text-brand-800 hover:file:bg-brand-200 cursor-pointer">
+                </div>
+
+                <div id="podPreviewBox" class="hidden border border-slate-200 rounded-xl p-3 text-center bg-slate-50">
+                    <p class="font-bold text-slate-700 mb-2">Image Preview</p>
+                    <img id="podPreviewImg" src="" alt="POD Preview" class="max-h-48 mx-auto rounded-lg shadow-md border border-slate-200 object-contain">
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('podUploadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">Cancel</button>
+                    <button type="button" onclick="confirmPodUpload()" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md">Save & Attach POD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive View POD Viewer Modal -->
+    <div id="viewPodModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 border border-slate-800 flex flex-col max-h-[95vh]">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-3 no-print">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <i class="fa-solid fa-file-circle-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-lg text-slate-900">Proof of Delivery (POD) Document</h3>
+                        <p id="viewPodSub" class="text-xs text-slate-500 font-mono">LR No: - | Party: -</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('viewPodModal')" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Toolbar Controls for Image Viewing -->
+            <div class="no-print flex items-center justify-between bg-slate-100 p-2 rounded-xl mb-3 text-xs">
+                <div class="flex items-center space-x-2">
+                    <button onclick="rotatePodImage(-90)" class="px-2.5 py-1.5 bg-white hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-semibold" title="Rotate Counter-Clockwise">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button onclick="rotatePodImage(90)" class="px-2.5 py-1.5 bg-white hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-semibold" title="Rotate Clockwise">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button onclick="resetPodImageTransform()" class="px-2.5 py-1.5 bg-white hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-semibold">
+                        Reset View
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="printPodDocument()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg flex items-center space-x-1">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Print POD</span>
+                    </button>
+                    <a id="downloadPodLink" download="POD_Document.png" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg flex items-center space-x-1">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Document Display Canvas Container -->
+            <div class="flex-1 bg-slate-950 rounded-2xl p-4 overflow-hidden flex items-center justify-center min-h-[350px] relative border border-slate-800">
+                <img id="viewPodImage" src="" alt="Proof of Delivery" class="max-h-[60vh] max-w-full rounded shadow-2xl object-contain transition-transform duration-200">
+            </div>
+
+            <div class="mt-3 flex justify-between items-center text-xs text-slate-500 no-print">
+                <span class="font-medium">KTK INDUS CROP CARE PVT LTD • Verified Supply Chain Record</span>
+                <button onclick="closeModal('viewPodModal')" class="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 z-50 flex items-center space-x-3 transform transition-all duration-300 translate-y-20 opacity-0">
+        <div id="toastIcon" class="text-emerald-400"><i class="fa-solid fa-circle-check text-xl"></i></div>
+        <div id="toastMsg" class="text-xs font-bold">Changes saved successfully!</div>
+    </div>
+
+    <script>
+        // Authentic Real Dataset from KTK INDUS CROP CARE PVT LTD Tracking Report
+        const INITIAL_SHIPMENTS = [
+            {"slNo": 1, "state": "KTK", "partyName": "SRI MARHUTHI AGRO TRADERS MIRLE", "destination": "MIRLE-MYSORE", "invNo": "ICCKA/26-270001", "invDate": "2026-08-15", "invAmt": 20000, "lrNo": "BLY78854", "dispatchDate": "2026-08-15", "qty": 20, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-17", "daysTaken": 2, "podStatus": "NO", "ewayBill": "", "ewayPartB": "", "remarks": "POD Pending from party", "podUrl": ""},
+            {"slNo": 2, "state": "KTK", "partyName": "SEETHUR PACS", "destination": "SEETHUR", "invNo": "ICCKA/26-270002", "invDate": "2026-08-17", "invAmt": 49580, "lrNo": "BLY80697", "dispatchDate": "2026-08-17", "qty": 8, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-19", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "Signed copy available", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+BLY80697%0AParty:+SEETHUR+PACS"},
+            {"slNo": 3, "state": "KTK", "partyName": "PACS -HERUR", "destination": "HERUR", "invNo": "ICCKA/26-270003", "invDate": "2026-08-19", "invAmt": 27852, "lrNo": "BLY80695", "dispatchDate": "2026-08-19", "qty": 5, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-23", "daysTaken": 4, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+BLY80695%0AParty:+PACS+-HERUR"},
+            {"slNo": 4, "state": "KTK", "partyName": "PACS-BALEHONNUR", "destination": "BALEHONNUR", "invNo": "ICCKA/26-270004", "invDate": "2026-08-19", "invAmt": 28070, "lrNo": "BLY80696", "dispatchDate": "2026-08-19", "qty": 8, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-23", "daysTaken": 4, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+BLY80696%0AParty:+PACS-BALEHONNUR"},
+            {"slNo": 5, "state": "KTK", "partyName": "SURYASUTHA AGRO FRT-CHIKKAMAGALORE", "destination": "CHIKKAMAGALORE", "invNo": "ICCKA/26-270005", "invDate": "2026-08-20", "invAmt": 40380, "lrNo": "BEL-7321", "dispatchDate": "2026-08-20", "qty": 3, "transport": "ANANYA", "contact": "63638 34350", "delivered": "YES", "deliveredDate": "2026-08-21", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 6, "state": "KTK", "partyName": "SRI VEERANAGOUDA S HUGAR-SINDAGI", "destination": "SINDAGI", "invNo": "ICCKA/26-270006", "invDate": "2026-08-20", "invAmt": 35730, "lrNo": "37754", "dispatchDate": "2026-08-20", "qty": 4, "transport": "BLR LORRY", "contact": "93424 07519", "delivered": "YES", "deliveredDate": "2026-08-21", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 7, "state": "KTK", "partyName": "PACS- ALNVAR", "destination": "ALNAVAR-DHARWAD", "invNo": "ICCKA/26-270007", "invDate": "2026-08-21", "invAmt": 47682, "lrNo": "BLY80700", "dispatchDate": "2026-08-21", "qty": 14, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-24", "daysTaken": 3, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 8, "state": "KTK", "partyName": "SRI SIDDARAMESHWARA AGRO TRADERS -HARAPPANAHALLI", "destination": "HARAPANAHALLI-DAVANGERE", "invNo": "ICCKA/26-270008", "invDate": "2026-08-22", "invAmt": 18200, "lrNo": "173", "dispatchDate": "2026-08-22", "qty": 2, "transport": "A.S.M", "contact": "94488 23891", "delivered": "YES", "deliveredDate": "2026-08-23", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 9, "state": "KTK", "partyName": "BALAJI HARDWARE & MACHINERY - SINDAGI", "destination": "SINDGI-BIJAPUR", "invNo": "ICCKA/26-270009", "invDate": "2026-08-24", "invAmt": 30510, "lrNo": "37755", "dispatchDate": "2026-08-24", "qty": 3, "transport": "BLR LORRY", "contact": "93424 07519", "delivered": "YES", "deliveredDate": "2026-08-25", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 10, "state": "KTK", "partyName": "ANJANEYA ENTERPRISES-KUDLIGI", "destination": "KUDLIGI", "invNo": "ICCKA/26-270010", "invDate": "2026-08-24", "invAmt": 28500, "lrNo": "563", "dispatchDate": "2026-08-24", "qty": 5, "transport": "S.S.T", "contact": "99017 38789", "delivered": "YES", "deliveredDate": "2026-08-25", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 11, "state": "KTK", "partyName": "BASAVESHWARA PACS-KALAKALLI", "destination": "KALAKALLI", "invNo": "ICCKA/26-270011", "invDate": "2026-08-27", "invAmt": 49052, "lrNo": "16584", "dispatchDate": "2026-08-27", "qty": 11, "transport": "SRI PACS", "contact": "97424 53239", "delivered": "YES", "deliveredDate": "2026-08-29", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 12, "state": "KTK", "partyName": "SRI BALAJI AGRO TRADERS - BADAMI", "destination": "BADAMI", "invNo": "ICCKA/26-270012", "invDate": "2026-08-27", "invAmt": 53000, "lrNo": "BLY81792", "dispatchDate": "2026-08-27", "qty": 10, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-29", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "141935661649", "ewayPartB": "YES", "remarks": "", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+BLY81792%0ABALAJI+AGRO+BADAMI"},
+            {"slNo": 13, "state": "KTK", "partyName": "PACS - LOKAPURA", "destination": "LOKAPURA", "invNo": "ICCKA/26-270013", "invDate": "2026-08-27", "invAmt": 51280, "lrNo": "BLY81793", "dispatchDate": "2026-08-27", "qty": 10, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-08-29", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "131935661686", "ewayPartB": "YES", "remarks": "", "podUrl": ""},
+            {"slNo": 14, "state": "KTK", "partyName": "GOPAL KRISHNA TRADERS -HAGARIBOMMANAHALLI", "destination": "HAGARIBOMMANAHALLI", "invNo": "ICCKA/26-270014", "invDate": "2026-08-27", "invAmt": 26000, "lrNo": "41", "dispatchDate": "2026-08-27", "qty": 5, "transport": "A.S.M", "contact": "94488 23891", "delivered": "YES", "deliveredDate": "2026-08-28", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 15, "state": "KTK", "partyName": "S S ORGANICS -BELLARY", "destination": "BELLARY", "invNo": "ICCKA/26-270015", "invDate": "2026-08-29", "invAmt": 18200, "lrNo": "173", "dispatchDate": "2026-08-29", "qty": 2, "transport": "LOCAL AUTO", "contact": "98451 12345", "delivered": "YES", "deliveredDate": "2026-08-29", "daysTaken": 0, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 16, "state": "KTK", "partyName": "M/S KISHAN TRADERS-BAGALKOT", "destination": "BAGALKOT", "invNo": "ICCKA/26-270016", "invDate": "2026-08-31", "invAmt": 18200, "lrNo": "BLY81798", "dispatchDate": "2026-08-31", "qty": 2, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-02", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 17, "state": "KTK", "partyName": "S L N AGRO TRADERS - MUDIGERE", "destination": "MUDIGERE", "invNo": "ICCKA/26-270017", "invDate": "2026-08-31", "invAmt": 30000, "lrNo": "BEL-7407", "dispatchDate": "2026-08-31", "qty": 3, "transport": "ANANYA", "contact": "63638 34350", "delivered": "YES", "deliveredDate": "2026-09-02", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 18, "state": "KTK", "partyName": "AGRI CLINIC & AGRI BUSINESS CENTER - JAMKHANDI", "destination": "JAMKHANDI", "invNo": "ICCKA/26-270018", "invDate": "2026-08-31", "invAmt": 25500, "lrNo": "BLY81799", "dispatchDate": "2026-08-31", "qty": 3, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-02", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 19, "state": "KTK", "partyName": "SRI BANASHANKARI AGRO AGENCIES - KERUR", "destination": "KERUR", "invNo": "ICCKA/26-270019", "invDate": "2026-09-04", "invAmt": 26800, "lrNo": "BLY81800", "dispatchDate": "2026-09-04", "qty": 2, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-06", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 20, "state": "KTK", "partyName": "GREEN AGRO TRADERS -KOPPAL", "destination": "KOPPAL", "invNo": "ICCKA/26-270020", "invDate": "2026-09-08", "invAmt": 63784, "lrNo": "BLY81804", "dispatchDate": "2026-09-08", "qty": 13, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-10", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "111939882250", "ewayPartB": "YES", "remarks": "", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+BLY81804%0AGREEN+AGRO+KOPPAL"},
+            {"slNo": 21, "state": "KTK", "partyName": "SRI SHIVAPARVATHI AGRO ENTERPRISES-NARGUND", "destination": "NARGUND", "invNo": "ICCKA/26-270021", "invDate": "2026-09-08", "invAmt": 53000, "lrNo": "BLY81803", "dispatchDate": "2026-09-08", "qty": 10, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-10", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "121939882215", "ewayPartB": "YES", "remarks": "", "podUrl": ""},
+            {"slNo": 22, "state": "KTK", "partyName": "VEERABHADRESHWARA TRADERS-KERUR", "destination": "KERUR", "invNo": "ICCKA/26-270022", "invDate": "2026-09-08", "invAmt": 26500, "lrNo": "BLY81805", "dispatchDate": "2026-09-08", "qty": 5, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-10", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 23, "state": "KTK", "partyName": "SRI CHANNABASAVESHWARA FERTILIZERS - HOOVINA HADAGALI", "destination": "HADAGALI", "invNo": "ICCKA/26-270023", "invDate": "2026-09-15", "invAmt": 18200, "lrNo": "304", "dispatchDate": "2026-09-15", "qty": 2, "transport": "A.S.M", "contact": "94488 23891", "delivered": "YES", "deliveredDate": "2026-09-16", "daysTaken": 1, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 24, "state": "KTK", "partyName": "SRI MARHUTHI AGRO TRADERS MIRLE", "destination": "MIRLE-MYSORE", "invNo": "ICCKA/26-270024", "invDate": "2026-09-15", "invAmt": 18200, "lrNo": "BLY82498", "dispatchDate": "2026-09-15", "qty": 2, "transport": "SGRL", "contact": "90350 47984", "delivered": "YES", "deliveredDate": "2026-09-18", "daysTaken": 3, "podStatus": "RECEIVED", "ewayBill": "", "ewayPartB": "", "remarks": "", "podUrl": ""},
+            {"slNo": 25, "state": "KTK", "partyName": "BASAVESHWARA PACS-KALAKALLI", "destination": "KALAKALLI", "invNo": "ICCKA/26-270025", "invDate": "2026-09-18", "invAmt": 63784, "lrNo": "16752", "dispatchDate": "2026-09-18", "qty": 13, "transport": "SRI PACS", "contact": "97424 53239", "delivered": "YES", "deliveredDate": "2026-09-20", "daysTaken": 2, "podStatus": "RECEIVED", "ewayBill": "131948064843", "ewayPartB": "YES", "remarks": "", "podUrl": "https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+16752%0ABASAVESHWARA+PACS"},
+            {"slNo": 26, "state": "KTK", "partyName": "PACS - LOKAPURA", "destination": "LOKAPURA", "invNo": "ICCKA/26-270026", "invDate": "2026-09-18", "invAmt": 53000, "lrNo": "BLY82982", "dispatchDate": "2026-09-18", "qty": 10, "transport": "SGRL", "contact": "90350 47984", "delivered": "NO", "deliveredDate": "", "daysTaken": 0, "podStatus": "NO", "ewayBill": "141948064883", "ewayPartB": "YES", "remarks": "In Transit via SGRL Lorry", "podUrl": ""}
+        ];
+
+        let shipments = [];
+        let filteredShipments = [];
+        let isAdminLoggedIn = false;
+        let tempPodBase64 = null;
+        let podRotationDegree = 0;
+
+        window.onload = function() {
+            loadShipments();
+            renderTable();
+            updateMetrics();
+        };
+
+        // Load shipments from LocalStorage or seed default dataset
+        function loadShipments() {
+            const stored = localStorage.getItem('ktk_indus_logistics_v2');
+            if (stored) {
+                try {
+                    shipments = JSON.parse(stored);
+                } catch (e) {
+                    console.error("Failed to parse LocalStorage data", e);
+                    shipments = [...INITIAL_SHIPMENTS];
+                }
+            } else {
+                shipments = [...INITIAL_SHIPMENTS];
+                saveAllToStorage(false);
+            }
+            filteredShipments = [...shipments];
+        }
+
+        // Save data to LocalStorage
+        function saveAllToStorage(showToast = true) {
+            localStorage.setItem('ktk_indus_logistics_v2', JSON.stringify(shipments));
+            if (showToast) {
+                showNotification('All shipment updates saved successfully to system storage!', 'success');
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (filteredShipments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-box-open text-4xl mb-3 block text-slate-300"></i>
+                            <p class="font-bold text-slate-600">No matching shipment records found.</p>
+                            <p class="text-xs">Try adjusting your filter search criteria.</p>
+                        </td>
+                    </tr>`;
+                document.getElementById('visibleCount').innerText = '0';
+                return;
+            }
+
+            filteredShipments.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-emerald-50/40 transition duration-150 border-b border-slate-100";
+
+                // Delivery Status Pill
+                const isDelivered = item.delivered === 'YES';
+                const delBadge = isDelivered 
+                    ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center space-x-1 shadow-sm"><i class="fa-solid fa-circle-check"></i> <span>DELIVERED</span></span>`
+                    : `<span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center space-x-1 shadow-sm"><i class="fa-solid fa-truck-fast animate-pulse"></i> <span>IN TRANSIT</span></span>`;
+
+                // POD Status Pill
+                const isPodReceived = item.podStatus === 'RECEIVED';
+                const podBadge = isPodReceived
+                    ? `<span class="bg-teal-100 text-teal-800 font-bold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center space-x-1 shadow-sm"><i class="fa-solid fa-file-circle-check"></i> <span>RECEIVED</span></span>`
+                    : `<span class="bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full text-[10px]">PENDING</span>`;
+
+                // Action Buttons depending on Admin Mode
+                let actionBtns = '';
+                if (isAdminLoggedIn) {
+                    actionBtns = `
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="openPodUploadModal(${item.slNo})" title="Upload / Attach POD Document" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                                <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                            </button>
+                            <button onclick="openShipmentModal(${item.slNo})" title="Edit Record" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            </button>
+                            <button onclick="deleteShipment(${item.slNo})" title="Delete Record" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    actionBtns = item.podUrl 
+                        ? `<button onclick="viewPodImage('${item.podUrl}', '${item.lrNo}', '${item.partyName}')" class="text-brand-700 hover:text-brand-900 font-bold text-[11px] underline flex items-center justify-center space-x-1 mx-auto"><i class="fa-solid fa-file-lines text-xs"></i> <span>View POD</span></button>`
+                        : `<span class="text-slate-400 text-[10px] italic">No POD Attached</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${item.slNo}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900">${item.invNo}</div>
+                        <div class="text-[10px] text-slate-500 font-medium"><i class="fa-solid fa-calendar-day"></i> ${item.invDate}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-800 line-clamp-1" title="${item.partyName}">${item.partyName}</div>
+                        <div class="text-[10px] text-slate-500"><i class="fa-solid fa-location-dot text-brand-600"></i> ${item.destination}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900 font-mono">${item.lrNo}</div>
+                        <div class="text-[10px] text-slate-500">${item.transport} ${item.contact ? `(${item.contact})` : ''}</div>
+                    </td>
+                    <td class="p-3 text-center font-bold text-slate-800">${item.qty}</td>
+                    <td class="p-3 text-right font-black text-slate-900">₹${Number(item.invAmt).toLocaleString('en-IN')}</td>
+                    <td class="p-3 text-center">
+                        ${delBadge}
+                        ${isDelivered && item.deliveredDate ? `<div class="text-[9px] text-slate-400 font-semibold mt-0.5">${item.deliveredDate} (${item.daysTaken || 0}d)</div>` : ''}
+                    </td>
+                    <td class="p-3 text-center">${podBadge}</td>
+                    <td class="p-3 text-center">
+                        ${item.ewayBill ? `<span class="text-[10px] font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-semibold" title="Part B: ${item.ewayPartB}">${item.ewayBill}</span>` : '<span class="text-slate-300">-</span>'}
+                    </td>
+                    <td class="p-3 text-center">${actionBtns}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('visibleCount').innerText = filteredShipments.length;
+            document.getElementById('recordCount').innerText = shipments.length;
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById('tableFilterInput').value.toLowerCase().trim();
+            const delVal = document.getElementById('delFilter').value;
+            const podVal = document.getElementById('podFilter').value;
+
+            filteredShipments = shipments.filter(item => {
+                const matchesSearch = 
+                    item.invNo.toLowerCase().includes(searchVal) ||
+                    item.lrNo.toLowerCase().includes(searchVal) ||
+                    item.partyName.toLowerCase().includes(searchVal) ||
+                    item.destination.toLowerCase().includes(searchVal) ||
+                    item.transport.toLowerCase().includes(searchVal);
+
+                const matchesDel = (delVal === 'ALL') ||
+                    (delVal === 'DELIVERED' && item.delivered === 'YES') ||
+                    (delVal === 'TRANSIT' && item.delivered !== 'YES');
+
+                const matchesPod = (podVal === 'ALL') || 
+                    (podVal === 'RECEIVED' && item.podStatus === 'RECEIVED') ||
+                    (podVal === 'NO' && item.podStatus !== 'RECEIVED');
+
+                return matchesSearch && matchesDel && matchesPod;
+            });
+
+            renderTable();
+        }
+
+        function updateMetrics() {
+            const total = shipments.length;
+            const delivered = shipments.filter(s => s.delivered === 'YES').length;
+            const transit = total - delivered;
+            const podReceived = shipments.filter(s => s.podStatus === 'RECEIVED').length;
+            const totalAmt = shipments.reduce((sum, s) => sum + (Number(s.invAmt) || 0), 0);
+
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statDelivered').innerText = delivered;
+            document.getElementById('statTransit').innerText = transit;
+            document.getElementById('statPodReceived').innerText = podReceived;
+            document.getElementById('statAmount').innerText = '₹' + totalAmt.toLocaleString('en-IN');
+        }
+
+        function handleQuickTrack(e) {
+            if (e.key === 'Enter') {
+                executeQuickTrack();
+            }
+        }
+
+        function executeQuickTrack() {
+            const q = document.getElementById('quickSearchInput').value.trim().toLowerCase();
+            const resContainer = document.getElementById('quickTrackResult');
+
+            if (!q) {
+                resContainer.classList.add('hidden');
+                return;
+            }
+
+            const match = shipments.find(s => 
+                s.lrNo.toLowerCase() === q || 
+                s.invNo.toLowerCase() === q ||
+                s.partyName.toLowerCase().includes(q)
+            );
+
+            resContainer.classList.remove('hidden');
+
+            if (!match) {
+                resContainer.innerHTML = `
+                    <div class="text-center py-6 text-slate-500">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-3xl mb-2 block"></i>
+                        <h4 class="font-bold text-base text-slate-800">No Tracking Record Found</h4>
+                        <p class="text-xs text-slate-500 mt-1">Please verify your LR Number (e.g. BLY81800) or Invoice Number and try again.</p>
+                    </div>`;
+                return;
+            }
+
+            // Timeline calculations
+            const isDelivered = match.delivered === 'YES';
+            const hasPod = match.podStatus === 'RECEIVED';
+
+            resContainer.innerHTML = `
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between border-b border-slate-200/80 pb-4 mb-4 gap-3">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="bg-brand-100 text-brand-900 text-[11px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider">LR NO: ${match.lrNo}</span>
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-0.5 rounded-full uppercase">STATE: ${match.state}</span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900">${match.partyName}</h3>
+                        <p class="text-xs text-slate-500 font-medium"><i class="fa-solid fa-location-dot text-brand-600"></i> Destination: ${match.destination}</p>
+                    </div>
+
+                    <div class="bg-emerald-50/70 border border-emerald-200/80 p-3 rounded-2xl flex items-center space-x-4">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Invoice Amount</span>
+                            <span class="text-xl font-black text-emerald-800">₹${Number(match.invAmt).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="border-l border-emerald-200 pl-4">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Transit Days</span>
+                            <span class="text-base font-extrabold text-slate-800">${match.daysTaken || 0} Days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Visual Shipment Timeline -->
+                <div class="my-6">
+                    <p class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Live Delivery Timeline</p>
+                    <div class="grid grid-cols-4 gap-2 relative">
+                        <!-- Connecting Line -->
+                        <div class="absolute top-4 left-0 right-0 h-1 bg-slate-200 -z-0"></div>
+                        <div class="absolute top-4 left-0 h-1 bg-brand-500 transition-all duration-500 -z-0" style="width: ${hasPod ? '100%' : isDelivered ? '75%' : '50%'}"></div>
+
+                        <!-- Stage 1 -->
+                        <div class="flex flex-col items-center text-center z-10">
+                            <div class="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <span class="text-[11px] font-bold mt-2 text-slate-800">Invoice Created</span>
+                            <span class="text-[10px] text-slate-400">${match.invDate}</span>
+                        </div>
+
+                        <!-- Stage 2 -->
+                        <div class="flex flex-col items-center text-center z-10">
+                            <div class="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                                <i class="fa-solid fa-truck-dispatch"></i>
+                            </div>
+                            <span class="text-[11px] font-bold mt-2 text-slate-800">Dispatched</span>
+                            <span class="text-[10px] text-slate-400">${match.dispatchDate}</span>
+                        </div>
+
+                        <!-- Stage 3 -->
+                        <div class="flex flex-col items-center text-center z-10">
+                            <div class="w-8 h-8 rounded-full ${isDelivered ? 'bg-brand-500 text-white' : 'bg-amber-500 text-white animate-bounce'} flex items-center justify-center font-bold text-xs shadow-md">
+                                <i class="fa-solid ${isDelivered ? 'fa-house-circle-check' : 'fa-truck-fast'}"></i>
+                            </div>
+                            <span class="text-[11px] font-bold mt-2 text-slate-800">${isDelivered ? 'Delivered' : 'In Transit'}</span>
+                            <span class="text-[10px] text-slate-400">${match.deliveredDate || 'On the way'}</span>
+                        </div>
+
+                        <!-- Stage 4 -->
+                        <div class="flex flex-col items-center text-center z-10">
+                            <div class="w-8 h-8 rounded-full ${hasPod ? 'bg-brand-500 text-white' : 'bg-slate-300 text-slate-600'} flex items-center justify-center font-bold text-xs shadow-md">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </div>
+                            <span class="text-[11px] font-bold mt-2 ${hasPod ? 'text-slate-800' : 'text-slate-400'}">POD Verified</span>
+                            <span class="text-[10px] text-slate-400">${hasPod ? 'Uploaded' : 'Pending'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipment Information Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-4">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[10px] font-bold">Invoice Number</span>
+                        <strong class="text-slate-900 font-extrabold">${match.invNo}</strong>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[10px] font-bold">Transporter</span>
+                        <strong class="text-slate-900 font-extrabold">${match.transport} ${match.contact ? `(${match.contact})` : ''}</strong>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[10px] font-bold">Quantity</span>
+                        <strong class="text-slate-900 font-extrabold">${match.qty} Boxes</strong>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[10px] font-bold">E-Way Bill No</span>
+                        <strong class="text-slate-900 font-extrabold font-mono">${match.ewayBill || 'N/A'}</strong>
+                    </div>
+                </div>
+
+                <!-- POD Quick Access Footer -->
+                <div class="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-slate-700">Remarks / Notes:</span>
+                        <span class="text-slate-600 italic">${match.remarks || 'No special instructions recorded.'}</span>
+                    </div>
+
+                    ${match.podUrl ? `
+                        <button onclick="viewPodImage('${match.podUrl}', '${match.lrNo}', '${match.partyName}')" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow-md">
+                            <i class="fa-solid fa-file-invoice"></i>
+                            <span>View Signed POD</span>
+                        </button>
+                    ` : '<span class="text-amber-600 font-bold text-[11px] bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200"><i class="fa-solid fa-clock"></i> POD Document Pending</span>'}
+                </div>
+            `;
+        }
+
+        function toggleAdminAuth() {
+            if (isAdminLoggedIn) {
+                isAdminLoggedIn = false;
+                document.getElementById('authBtnText').innerText = 'Admin Login';
+                document.getElementById('authBtnIcon').className = 'fa-solid fa-user-lock text-brand-500';
+                document.getElementById('adminBadge').classList.add('hidden');
+                document.getElementById('saveAllBtn').classList.add('hidden');
+                document.getElementById('addShipmentBtn').classList.add('hidden');
+                showNotification('Logged out from Admin mode.', 'info');
+                renderTable();
+            } else {
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value;
+            const p = document.getElementById('loginPassword').value;
+
+            if (u === 'admin' && p === '123') {
+                activateAdminState();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function quickToggleAdmin() {
+            activateAdminState();
+        }
+
+        function activateAdminState() {
+            isAdminLoggedIn = true;
+            document.getElementById('authBtnText').innerText = 'Admin Logout';
+            document.getElementById('authBtnIcon').className = 'fa-solid fa-right-from-bracket text-red-400';
+            document.getElementById('adminBadge').classList.remove('hidden');
+            document.getElementById('saveAllBtn').classList.remove('hidden');
+            document.getElementById('addShipmentBtn').classList.remove('hidden');
+            closeModal('loginModal');
+            showNotification('Admin Mode active! Full Edit/Delete/Upload enabled.', 'success');
+            renderTable();
+        }
+
+        function resetToHome() {
+            document.getElementById('quickSearchInput').value = '';
+            document.getElementById('quickTrackResult').classList.add('hidden');
+            document.getElementById('tableFilterInput').value = '';
+            document.getElementById('delFilter').value = 'ALL';
+            document.getElementById('podFilter').value = 'ALL';
+            applyFilters();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            if (id === 'loginModal') {
+                document.getElementById('loginError').classList.add('hidden');
+            }
+        }
+
+        // Auto Calculate Transit Days
+        function autoCalcDays() {
+            const dispatch = document.getElementById('formDispatchDate').value;
+            const delivered = document.getElementById('formDeliveredDate').value;
+            const delStatus = document.getElementById('formDelivered').value;
+
+            if (delStatus === 'YES' && dispatch && delivered) {
+                const d1 = new Date(dispatch);
+                const d2 = new Date(delivered);
+                const diffTime = d2 - d1;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                document.getElementById('formDaysTaken').value = diffDays >= 0 ? diffDays : 0;
+            } else {
+                document.getElementById('formDaysTaken').value = 0;
+            }
+        }
+
+        // Direct POD handling inside Add Form
+        function handleFormPodFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('formPodBase64').value = evt.target.result;
+                    document.getElementById('formPodStatus').value = 'RECEIVED';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openShipmentModal(slNo = null) {
+            const form = document.getElementById('shipmentForm');
+            form.reset();
+            document.getElementById('formPodBase64').value = '';
+
+            if (slNo) {
+                const item = shipments.find(s => s.slNo === slNo);
+                if (!item) return;
+
+                document.getElementById('modalTitle').innerText = `Edit Shipment Record #${slNo}`;
+                document.getElementById('editSlNo').value = item.slNo;
+                document.getElementById('formState').value = item.state || 'KTK';
+                document.getElementById('formInvNo').value = item.invNo;
+                document.getElementById('formInvDate').value = item.invDate;
+                document.getElementById('formPartyName').value = item.partyName;
+                document.getElementById('formDestination').value = item.destination;
+                document.getElementById('formLrNo').value = item.lrNo;
+                document.getElementById('formTransport').value = item.transport;
+                document.getElementById('formContact').value = item.contact || '';
+                document.getElementById('formDispatchDate').value = item.dispatchDate || '';
+                document.getElementById('formQty').value = item.qty || 1;
+                document.getElementById('formInvAmt').value = item.invAmt || 0;
+                document.getElementById('formDelivered').value = item.delivered || 'YES';
+                document.getElementById('formDeliveredDate').value = item.deliveredDate || '';
+                document.getElementById('formDaysTaken').value = item.daysTaken || 0;
+                document.getElementById('formPodStatus').value = item.podStatus || 'RECEIVED';
+                document.getElementById('formEwayBill').value = item.ewayBill || '';
+                document.getElementById('formEwayPartB').value = item.ewayPartB || '';
+                document.getElementById('formRemarks').value = item.remarks || '';
+            } else {
+                document.getElementById('modalTitle').innerText = 'Add New Shipment Record';
+                document.getElementById('editSlNo').value = '';
+                const nextNo = shipments.length > 0 ? Math.max(...shipments.map(s => s.slNo)) + 1 : 1;
+                document.getElementById('formInvNo').value = `ICCKA/26-2700${nextNo < 10 ? '0' + nextNo : nextNo}`;
+                document.getElementById('formInvDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('formDispatchDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            document.getElementById('shipmentModal').classList.remove('hidden');
+        }
+
+        function saveShipment(e) {
+            e.preventDefault();
+
+            const editSlNo = document.getElementById('editSlNo').value;
+            const directPod = document.getElementById('formPodBase64').value;
+
+            const existingItem = editSlNo ? shipments.find(s => s.slNo == editSlNo) : null;
+
+            const newRecord = {
+                slNo: editSlNo ? parseInt(editSlNo) : (shipments.length > 0 ? Math.max(...shipments.map(s => s.slNo)) + 1 : 1),
+                state: document.getElementById('formState').value,
+                partyName: document.getElementById('formPartyName').value,
+                destination: document.getElementById('formDestination').value,
+                invNo: document.getElementById('formInvNo').value,
+                invDate: document.getElementById('formInvDate').value,
+                invAmt: parseFloat(document.getElementById('formInvAmt').value) || 0,
+                lrNo: document.getElementById('formLrNo').value,
+                dispatchDate: document.getElementById('formDispatchDate').value,
+                qty: parseInt(document.getElementById('formQty').value) || 0,
+                transport: document.getElementById('formTransport').value,
+                contact: document.getElementById('formContact').value,
+                delivered: document.getElementById('formDelivered').value,
+                deliveredDate: document.getElementById('formDeliveredDate').value,
+                daysTaken: parseInt(document.getElementById('formDaysTaken').value) || 0,
+                podStatus: document.getElementById('formPodStatus').value,
+                ewayBill: document.getElementById('formEwayBill').value,
+                ewayPartB: document.getElementById('formEwayPartB').value,
+                remarks: document.getElementById('formRemarks').value,
+                podUrl: directPod || (existingItem ? existingItem.podUrl : '')
+            };
+
+            if (editSlNo) {
+                const idx = shipments.findIndex(s => s.slNo == editSlNo);
+                if (idx !== -1) shipments[idx] = newRecord;
+                showNotification(`Shipment #${editSlNo} updated successfully!`, 'success');
+            } else {
+                shipments.unshift(newRecord);
+                showNotification('New shipment entry added!', 'success');
+            }
+
+            saveAllToStorage(false);
+            applyFilters();
+            updateMetrics();
+            closeModal('shipmentModal');
+        }
+
+        function deleteShipment(slNo) {
+            if (confirm(`Are you sure you want to delete Shipment record #${slNo}? This action cannot be undone.`)) {
+                shipments = shipments.filter(s => s.slNo !== slNo);
+                saveAllToStorage(false);
+                applyFilters();
+                updateMetrics();
+                showNotification(`Shipment #${slNo} deleted.`, 'info');
+            }
+        }
+
+        function openPodUploadModal(slNo) {
+            const item = shipments.find(s => s.slNo === slNo);
+            if (!item) return;
+
+            document.getElementById('podTargetSlNo').value = slNo;
+            document.getElementById('podModalLr').innerText = item.lrNo;
+            document.getElementById('podFileInput').value = '';
+            document.getElementById('podPreviewBox').classList.add('hidden');
+            tempPodBase64 = item.podUrl || null;
+
+            if (item.podUrl) {
+                document.getElementById('podPreviewImg').src = item.podUrl;
+                document.getElementById('podPreviewBox').classList.remove('hidden');
+            }
+
+            document.getElementById('podUploadModal').classList.remove('hidden');
+        }
+
+        function handlePodFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    tempPodBase64 = evt.target.result;
+                    document.getElementById('podPreviewImg').src = tempPodBase64;
+                    document.getElementById('podPreviewBox').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function confirmPodUpload() {
+            const slNo = parseInt(document.getElementById('podTargetSlNo').value);
+            const item = shipments.find(s => s.slNo === slNo);
+
+            if (item) {
+                if (tempPodBase64) {
+                    item.podUrl = tempPodBase64;
+                    item.podStatus = 'RECEIVED';
+                } else {
+                    item.podUrl = `https://placehold.co/600x800/047857/ffffff?text=POD+VERIFIED%0ALR:+${item.lrNo}%0A${encodeURIComponent(item.partyName)}`;
+                    item.podStatus = 'RECEIVED';
+                }
+                saveAllToStorage(false);
+                applyFilters();
+                updateMetrics();
+                closeModal('podUploadModal');
+                showNotification(`POD attached successfully for LR No: ${item.lrNo}`, 'success');
+            }
+        }
+
+        function viewPodImage(url, lrNo, partyName) {
+            const img = document.getElementById('viewPodImage');
+            img.src = url;
+            podRotationDegree = 0;
+            img.style.transform = `rotate(0deg)`;
+
+            document.getElementById('viewPodSub').innerText = `LR No: ${lrNo} | Party: ${partyName}`;
+            document.getElementById('downloadPodLink').href = url;
+            document.getElementById('downloadPodLink').download = `POD_${lrNo}.png`;
+
+            document.getElementById('viewPodModal').classList.remove('hidden');
+        }
+
+        function rotatePodImage(deg) {
+            podRotationDegree = (podRotationDegree + deg) % 360;
+            document.getElementById('viewPodImage').style.transform = `rotate(${podRotationDegree}deg)`;
+        }
+
+        function resetPodImageTransform() {
+            podRotationDegree = 0;
+            document.getElementById('viewPodImage').style.transform = `rotate(0deg)`;
+        }
+
+        function printPodDocument() {
+            window.print();
+        }
+
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('SheetJS Excel library is loading. Please retry in a moment.');
+                return;
+            }
+
+            const exportData = shipments.map(item => ({
+                "SL NO": item.slNo,
+                "STATE": item.state,
+                "PARTY NAME": item.partyName,
+                "DESTINATION": item.destination,
+                "INVOICE NO": item.invNo,
+                "INVOICE DATE": item.invDate,
+                "INV AMT (RS)": item.invAmt,
+                "LR NO": item.lrNo,
+                "DISPATCH DATE": item.dispatchDate,
+                "QTY": item.qty,
+                "TRANSPORT": item.transport,
+                "CONTACT NO": item.contact,
+                "DELIVERED": item.delivered,
+                "DELIVERED DATE": item.deliveredDate,
+                "DAYS TAKEN": item.daysTaken,
+                "POD STATUS": item.podStatus,
+                "EWAY BILL": item.ewayBill,
+                "PART B": item.ewayPartB,
+                "REMARKS": item.remarks
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, "LOGISTICS TRACKING");
+
+            // Define custom column widths
+            worksheet['!cols'] = [
+                { wch: 6 },  // SL NO
+                { wch: 8 },  // STATE
+                { wch: 38 }, // PARTY NAME
+                { wch: 22 }, // DESTINATION
+                { wch: 20 }, // INVOICE NO
+                { wch: 14 }, // INVOICE DATE
+                { wch: 14 }, // INV AMT
+                { wch: 15 }, // LR NO
+                { wch: 14 }, // DISPATCH DATE
+                { wch: 8 },  // QTY
+                { wch: 16 }, // TRANSPORT
+                { wch: 15 }, // CONTACT NO
+                { wch: 12 }, // DELIVERED
+                { wch: 14 }, // DELIVERED DATE
+                { wch: 12 }, // DAYS TAKEN
+                { wch: 14 }, // POD STATUS
+                { wch: 18 }, // EWAY BILL
+                { wch: 8 },  // PART B
+                { wch: 22 }  // REMARKS
+            ];
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `KTK_INDUS_LOGISTICS_REPORT_${dateStr}.xlsx`);
+            showNotification('Single-sheet Excel report generated & downloaded!', 'success');
+        }
+
+        function showNotification(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (type === 'success') {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400 text-xl"></i>`;
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+    </script>
+</body>
+</html>
